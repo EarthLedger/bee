@@ -84,30 +84,30 @@ func (t *testObserver) NotifyPaymentSent(peer swarm.Address, amount *big.Int, er
 
 type addressbookMock struct {
 	beneficiary     func(peer swarm.Address) (beneficiary common.Address, known bool, err error)
-	chequebook      func(peer swarm.Address) (chequebookAddress common.Address, known bool, err error)
+	chequebook      func(peer swarm.Address) (chequebookAddress common.Address, mulilAddress string, known bool, err error)
 	beneficiaryPeer func(beneficiary common.Address) (peer swarm.Address, known bool, err error)
-	chequebookPeer  func(chequebook common.Address) (peer swarm.Address, known bool, err error)
+	chequebookPeer  func(chequebook common.Address) (peer swarm.Address, mulilAddress string, known bool, err error)
 	putBeneficiary  func(peer swarm.Address, beneficiary common.Address) error
-	putChequebook   func(peer swarm.Address, chequebook common.Address) error
+	putChequebook   func(peer swarm.Address, mutilAddress string, chequebook common.Address) error
 }
 
 func (m *addressbookMock) Beneficiary(peer swarm.Address) (beneficiary common.Address, known bool, err error) {
 	return m.beneficiary(peer)
 }
-func (m *addressbookMock) Chequebook(peer swarm.Address) (chequebookAddress common.Address, known bool, err error) {
+func (m *addressbookMock) Chequebook(peer swarm.Address) (chequebookAddress common.Address, mulilAddress string, known bool, err error) {
 	return m.chequebook(peer)
 }
 func (m *addressbookMock) BeneficiaryPeer(beneficiary common.Address) (peer swarm.Address, known bool, err error) {
 	return m.beneficiaryPeer(beneficiary)
 }
-func (m *addressbookMock) ChequebookPeer(chequebook common.Address) (peer swarm.Address, known bool, err error) {
+func (m *addressbookMock) ChequebookPeer(chequebook common.Address) (peer swarm.Address, mulilAddress string, known bool, err error) {
 	return m.chequebookPeer(chequebook)
 }
 func (m *addressbookMock) PutBeneficiary(peer swarm.Address, beneficiary common.Address) error {
 	return m.putBeneficiary(peer, beneficiary)
 }
-func (m *addressbookMock) PutChequebook(peer swarm.Address, chequebook common.Address) error {
-	return m.putChequebook(peer, chequebook)
+func (m *addressbookMock) PutChequebook(peer swarm.Address, mutilAddress string, chequebook common.Address) error {
+	return m.putChequebook(peer, mutilAddress, chequebook)
 }
 
 type cashoutMock struct {
@@ -149,13 +149,13 @@ func TestReceiveCheque(t *testing.T) {
 	)
 	networkID := uint64(1)
 	addressbook := &addressbookMock{
-		chequebook: func(p swarm.Address) (common.Address, bool, error) {
+		chequebook: func(p swarm.Address) (common.Address, string, bool, error) {
 			if !peer.Equal(p) {
 				t.Fatal("querying chequebook for wrong peer")
 			}
-			return chequebookAddress, true, nil
+			return chequebookAddress, "", true, nil
 		},
-		putChequebook: func(p swarm.Address, chequebook common.Address) (err error) {
+		putChequebook: func(p swarm.Address, mutilAddress string, chequebook common.Address) (err error) {
 			if !peer.Equal(p) {
 				t.Fatal("storing chequebook for wrong peer")
 			}
@@ -181,7 +181,7 @@ func TestReceiveCheque(t *testing.T) {
 		observer,
 	)
 
-	err := swap.ReceiveCheque(context.Background(), peer, cheque)
+	err := swap.ReceiveCheque(context.Background(), peer, "", cheque)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,8 +227,8 @@ func TestReceiveChequeReject(t *testing.T) {
 	)
 	networkID := uint64(1)
 	addressbook := &addressbookMock{
-		chequebook: func(p swarm.Address) (common.Address, bool, error) {
-			return chequebookAddress, true, nil
+		chequebook: func(p swarm.Address) (common.Address, string, bool, error) {
+			return chequebookAddress, "", true, nil
 		},
 	}
 
@@ -247,7 +247,7 @@ func TestReceiveChequeReject(t *testing.T) {
 		observer,
 	)
 
-	err := swap.ReceiveCheque(context.Background(), peer, cheque)
+	err := swap.ReceiveCheque(context.Background(), peer, "", cheque)
 	if err == nil {
 		t.Fatal("accepted invalid cheque")
 	}
@@ -282,8 +282,8 @@ func TestReceiveChequeWrongChequebook(t *testing.T) {
 	chequeStore := mockchequestore.NewChequeStore()
 	networkID := uint64(1)
 	addressbook := &addressbookMock{
-		chequebook: func(p swarm.Address) (common.Address, bool, error) {
-			return common.HexToAddress("0xcfff"), true, nil
+		chequebook: func(p swarm.Address) (common.Address, string, bool, error) {
+			return common.HexToAddress("0xcfff"), "", true, nil
 		},
 	}
 
@@ -301,7 +301,7 @@ func TestReceiveChequeWrongChequebook(t *testing.T) {
 		observer,
 	)
 
-	err := swapService.ReceiveCheque(context.Background(), peer, cheque)
+	err := swapService.ReceiveCheque(context.Background(), peer, "", cheque)
 	if err == nil {
 		t.Fatal("accepted invalid cheque")
 	}
@@ -623,11 +623,11 @@ func TestCashout(t *testing.T) {
 	peer := swarm.MustParseHexAddress("abcd")
 	txHash := common.HexToHash("eeee")
 	addressbook := &addressbookMock{
-		chequebook: func(p swarm.Address) (common.Address, bool, error) {
+		chequebook: func(p swarm.Address) (common.Address, string, bool, error) {
 			if !peer.Equal(p) {
 				t.Fatal("querying chequebook for wrong peer")
 			}
-			return theirChequebookAddress, true, nil
+			return theirChequebookAddress, "", true, nil
 		},
 	}
 
@@ -675,11 +675,11 @@ func TestCashoutStatus(t *testing.T) {
 	theirChequebookAddress := common.HexToAddress("ffff")
 	peer := swarm.MustParseHexAddress("abcd")
 	addressbook := &addressbookMock{
-		chequebook: func(p swarm.Address) (common.Address, bool, error) {
+		chequebook: func(p swarm.Address) (common.Address, string, bool, error) {
 			if !peer.Equal(p) {
 				t.Fatal("querying chequebook for wrong peer")
 			}
-			return theirChequebookAddress, true, nil
+			return theirChequebookAddress, "", true, nil
 		},
 	}
 

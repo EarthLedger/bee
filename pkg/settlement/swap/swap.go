@@ -37,9 +37,9 @@ type Interface interface {
 	// LastSentCheques returns the list of last sent cheques for all peers
 	LastSentCheques() (map[string]*chequebook.SignedCheque, error)
 	// LastReceivedCheque returns the last received cheque for the peer
-	LastReceivedCheque(peer swarm.Address) (*chequebook.SignedCheque, error)
+	LastReceivedCheque(peer swarm.Address) (*chequebook.SignedCheque, string, error)
 	// LastReceivedCheques returns the list of last received cheques for all peers
-	LastReceivedCheques() (map[string]*chequebook.SignedCheque, error)
+	LastReceivedCheques() (map[string]*chequebook.SignedCheque, map[string]string, error)
 	// CashCheque sends a cashing transaction for the last cheque of the peer
 	CashCheque(ctx context.Context, peer swarm.Address) (common.Hash, error)
 	// CashoutStatus gets the status of the latest cashout transaction for the peers chequebook
@@ -79,9 +79,9 @@ func New(proto swapprotocol.Interface, logger logging.Logger, store storage.Stat
 }
 
 // ReceiveCheque is called by the swap protocol if a cheque is received.
-func (s *Service) ReceiveCheque(ctx context.Context, peer swarm.Address, cheque *chequebook.SignedCheque) (err error) {
+func (s *Service) ReceiveCheque(ctx context.Context, peer swarm.Address, peerMutilAddress string, cheque *chequebook.SignedCheque) (err error) {
 	// check this is the same chequebook for this peer as previously
-	expectedChequebook, known, err := s.addressbook.Chequebook(peer)
+	expectedChequebook, _, known, err := s.addressbook.Chequebook(peer)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (s *Service) ReceiveCheque(ctx context.Context, peer swarm.Address, cheque 
 	}
 
 	if !known {
-		err = s.addressbook.PutChequebook(peer, cheque.Chequebook)
+		err = s.addressbook.PutChequebook(peer, peerMutilAddress, cheque.Chequebook)
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,7 @@ func (s *Service) TotalSent(peer swarm.Address) (totalSent *big.Int, err error) 
 
 // TotalReceived returns the total amount received from a peer
 func (s *Service) TotalReceived(peer swarm.Address) (totalReceived *big.Int, err error) {
-	chequebookAddress, known, err := s.addressbook.Chequebook(peer)
+	chequebookAddress, _, known, err := s.addressbook.Chequebook(peer)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (s *Service) SettlementsReceived() (map[string]*big.Int, error) {
 	}
 
 	for chequebook, cheque := range cheques {
-		peer, known, err := s.addressbook.ChequebookPeer(chequebook)
+		peer, _, known, err := s.addressbook.ChequebookPeer(chequebook)
 		if err != nil {
 			return nil, err
 		}
@@ -271,19 +271,19 @@ func (s *Service) LastSentCheque(peer swarm.Address) (*chequebook.SignedCheque, 
 }
 
 // LastReceivedCheque returns the last received cheque for the peer
-func (s *Service) LastReceivedCheque(peer swarm.Address) (*chequebook.SignedCheque, error) {
-
-	common, known, err := s.addressbook.Chequebook(peer)
+func (s *Service) LastReceivedCheque(peer swarm.Address) (*chequebook.SignedCheque, string, error) {
+	common, mutilAddress, known, err := s.addressbook.Chequebook(peer)
 
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	if !known {
-		return nil, chequebook.ErrNoCheque
+		return nil, "", chequebook.ErrNoCheque
 	}
 
-	return s.chequeStore.LastCheque(common)
+	sign, err := s.chequeStore.LastCheque(common)
+	return sign, mutilAddress, err
 }
 
 // LastSentCheques returns the list of last sent cheques for all peers
@@ -306,27 +306,29 @@ func (s *Service) LastSentCheques() (map[string]*chequebook.SignedCheque, error)
 }
 
 // LastReceivedCheques returns the list of last received cheques for all peers
-func (s *Service) LastReceivedCheques() (map[string]*chequebook.SignedCheque, error) {
+func (s *Service) LastReceivedCheques() (map[string]*chequebook.SignedCheque, map[string]string, error) {
 	lastcheques, err := s.chequeStore.LastCheques()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	resultmap := make(map[string]*chequebook.SignedCheque, len(lastcheques))
+	addressMap := make(map[string]string, len(lastcheques))
 
 	for i, j := range lastcheques {
-		addr, known, err := s.addressbook.ChequebookPeer(i)
+		addr, mutilAddress, known, err := s.addressbook.ChequebookPeer(i)
 		if err == nil && known {
 			resultmap[addr.String()] = j
+			addressMap[addr.String()] = mutilAddress
 		}
 	}
 
-	return resultmap, nil
+	return resultmap, addressMap, nil
 }
 
 // CashCheque sends a cashing transaction for the last cheque of the peer
 func (s *Service) CashCheque(ctx context.Context, peer swarm.Address) (common.Hash, error) {
-	chequebookAddress, known, err := s.addressbook.Chequebook(peer)
+	chequebookAddress, _, known, err := s.addressbook.Chequebook(peer)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -338,7 +340,7 @@ func (s *Service) CashCheque(ctx context.Context, peer swarm.Address) (common.Ha
 
 // CashoutStatus gets the status of the latest cashout transaction for the peers chequebook
 func (s *Service) CashoutStatus(ctx context.Context, peer swarm.Address) (*chequebook.CashoutStatus, error) {
-	chequebookAddress, known, err := s.addressbook.Chequebook(peer)
+	chequebookAddress, _, known, err := s.addressbook.Chequebook(peer)
 	if err != nil {
 		return nil, err
 	}

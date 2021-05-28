@@ -94,8 +94,9 @@ type StreamSpec struct {
 
 // Peer holds information about a Peer.
 type Peer struct {
-	Address  swarm.Address `json:"address"`
-	FullNode bool          `json:"fullNode"`
+	Address      swarm.Address `json:"address"`
+	MutilAddress string        `json:"mutilAddress"`
+	FullNode     bool          `json:"fullNode"`
 }
 
 // HandlerFunc handles a received Stream from a Peer.
