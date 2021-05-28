@@ -55,6 +55,7 @@ type chequebookLastChequePeerResponse struct {
 
 type chequebookLastChequesPeerResponse struct {
 	Peer         string                            `json:"peer"`
+	MutilAddress string                            `json:"mutilAddress"`
 	LastReceived *chequebookLastChequePeerResponse `json:"lastreceived"`
 	LastSent     *chequebookLastChequePeerResponse `json:"lastsent"`
 }
@@ -115,7 +116,7 @@ func (s *Service) chequebookLastPeerHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var lastReceivedResponse *chequebookLastChequePeerResponse
-	lastReceived, err := s.swap.LastReceivedCheque(peer)
+	lastReceived, mutilAddress, err := s.swap.LastReceivedCheque(peer)
 	if err != nil && err != chequebook.ErrNoCheque {
 		s.logger.Debugf("debug api: chequebook cheque peer: get peer %s last cheque: %v", peer.String(), err)
 		s.logger.Errorf("debug api: chequebook cheque peer: can't get peer %s last cheque", peer.String())
@@ -132,6 +133,7 @@ func (s *Service) chequebookLastPeerHandler(w http.ResponseWriter, r *http.Reque
 
 	jsonhttp.OK(w, chequebookLastChequesPeerResponse{
 		Peer:         addr,
+		MutilAddress: mutilAddress,
 		LastReceived: lastReceivedResponse,
 		LastSent:     lastSentResponse,
 	})
@@ -145,7 +147,7 @@ func (s *Service) chequebookAllLastHandler(w http.ResponseWriter, r *http.Reques
 		jsonhttp.InternalServerError(w, errCantLastCheque)
 		return
 	}
-	lastchequesreceived, err := s.swap.LastReceivedCheques()
+	lastchequesreceived, mutilAddresses, err := s.swap.LastReceivedCheques()
 	if err != nil {
 		s.logger.Debugf("debug api: chequebook cheque all: get all last cheques: %v", err)
 		s.logger.Errorf("debug api: chequebook cheque all: can't get all last cheques")
@@ -165,9 +167,12 @@ func (s *Service) chequebookAllLastHandler(w http.ResponseWriter, r *http.Reques
 			LastReceived: nil,
 		}
 	}
+
 	for i, j := range lastchequesreceived {
+		address := mutilAddresses[i]
 		if _, ok := lcr[i]; ok {
 			t := lcr[i]
+			t.MutilAddress = address
 			t.LastReceived = &chequebookLastChequePeerResponse{
 				Beneficiary: j.Cheque.Beneficiary.String(),
 				Chequebook:  j.Cheque.Chequebook.String(),
@@ -176,8 +181,9 @@ func (s *Service) chequebookAllLastHandler(w http.ResponseWriter, r *http.Reques
 			lcr[i] = t
 		} else {
 			lcr[i] = chequebookLastChequesPeerResponse{
-				Peer:     i,
-				LastSent: nil,
+				Peer:         i,
+				MutilAddress: address,
+				LastSent:     nil,
 				LastReceived: &chequebookLastChequePeerResponse{
 					Beneficiary: j.Cheque.Beneficiary.String(),
 					Chequebook:  j.Cheque.Chequebook.String(),

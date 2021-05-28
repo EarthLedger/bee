@@ -233,18 +233,20 @@ func (s *Service) LastSentCheques() (map[string]*chequebook.SignedCheque, error)
 	return nil, nil
 }
 
-func (s *Service) LastReceivedCheque(address swarm.Address) (*chequebook.SignedCheque, error) {
+func (s *Service) LastReceivedCheque(address swarm.Address) (*chequebook.SignedCheque, string, error) {
 	if s.lastReceivedChequeFunc != nil {
-		return s.lastReceivedChequeFunc(address)
+		sign, err := s.lastReceivedChequeFunc(address)
+		return sign, "", err
 	}
-	return nil, nil
+	return nil, "", nil
 }
 
-func (s *Service) LastReceivedCheques() (map[string]*chequebook.SignedCheque, error) {
+func (s *Service) LastReceivedCheques() (map[string]*chequebook.SignedCheque, map[string]string, error) {
 	if s.lastReceivedChequesFunc != nil {
-		return s.lastReceivedChequesFunc()
+		cheques, err := s.lastReceivedChequesFunc()
+		return cheques, nil, err
 	}
-	return nil, nil
+	return nil, nil, nil
 }
 
 func (s *Service) CashCheque(ctx context.Context, peer swarm.Address) (common.Hash, error) {

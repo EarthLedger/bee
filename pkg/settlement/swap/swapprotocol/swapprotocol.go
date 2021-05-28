@@ -36,7 +36,7 @@ type Interface interface {
 // Swap is the interface the settlement layer should implement to receive cheques.
 type Swap interface {
 	// ReceiveCheque is called by the swap protocol if a cheque is received.
-	ReceiveCheque(ctx context.Context, peer swarm.Address, cheque *chequebook.SignedCheque) error
+	ReceiveCheque(ctx context.Context, peer swarm.Address, peerMutilAddress string, cheque *chequebook.SignedCheque) error
 	// Handshake is called by the swap protocol when a handshake is received.
 	Handshake(peer swarm.Address, beneficiary common.Address) error
 }
@@ -170,7 +170,7 @@ func (s *Service) handler(ctx context.Context, p p2p.Peer, stream p2p.Stream) (e
 		return err
 	}
 
-	return s.swap.ReceiveCheque(ctx, p.Address, signedCheque)
+	return s.swap.ReceiveCheque(ctx, p.Address, p.MutilAddress, signedCheque)
 }
 
 // EmitCheque sends a signed cheque to a peer.

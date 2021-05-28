@@ -361,6 +361,7 @@ func (s *Service) AddProtocol(p p2p.ProtocolSpec) (err error) {
 
 		s.host.SetStreamHandlerMatch(id, matcher, func(streamlibp2p network.Stream) {
 			peerID := streamlibp2p.Conn().RemotePeer()
+			mutilAddress := string(streamlibp2p.Conn().RemoteMultiaddr().Bytes())
 			overlay, found := s.peers.overlay(peerID)
 			if !found {
 				_ = s.Disconnect(overlay)
@@ -395,7 +396,7 @@ func (s *Service) AddProtocol(p p2p.ProtocolSpec) (err error) {
 			logger := tracing.NewLoggerWithTraceID(ctx, s.logger)
 
 			s.metrics.HandledStreamCount.Inc()
-			if err := ss.Handler(ctx, p2p.Peer{Address: overlay}, stream); err != nil {
+			if err := ss.Handler(ctx, p2p.Peer{Address: overlay, MutilAddress: mutilAddress}, stream); err != nil {
 				var de *p2p.DisconnectError
 				if errors.As(err, &de) {
 					_ = s.Disconnect(overlay)
