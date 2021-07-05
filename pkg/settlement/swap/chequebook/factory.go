@@ -235,7 +235,7 @@ var (
 	XDaiChainID                = int64(100)
 	XDaiFactoryAddress         = common.HexToAddress("0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420")
 	TestnetChainID             = int64(2030)
-	TestnetFactoryAddress      = common.HexToAddress("0xce5CE79b4a62aA99940692FD7a7010bB2217bdA3")
+	TestnetFactoryAddress      = common.HexToAddress("0x64607D847e389D6D8d411B375b6C046F06472E50")
 )
 
 // DiscoverFactoryAddress returns the canonical factory for this chainID

@@ -331,7 +331,7 @@ var (
 	XDaiPostageStampContractAddress   = common.HexToAddress("0x6a1a21eca3ab28be85c7ba22b2d6eae5907c900e")
 	XDaiStartBlock                    = uint64(16515648)
 	TestnetChainID                     = int64(2030)
-	TestnetPostageStampContractAddress = common.HexToAddress("0xbf7ed1296366a39641c9b65db157d3e8cddf7b21")
+	TestnetPostageStampContractAddress = common.HexToAddress("0xEC16423f1cde5C6Ae09FC8b2c7a8f3209Fd2925b")
 	TestnetStartBlock                  = uint64(9645)
 
 )

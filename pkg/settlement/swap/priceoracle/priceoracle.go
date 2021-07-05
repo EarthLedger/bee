@@ -152,7 +152,7 @@ var (
 	xdaiChainID           = int64(100)
 	xdaiContractAddress   = common.HexToAddress("0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85")
 	testnetChainID         = int64(2030)
-	testnetContractAddress = common.HexToAddress("0x2Ba4A0453118fbe31dAB6008C990A80190e00d25")
+	testnetContractAddress = common.HexToAddress("0xe8112BbD9070A9741aC1F19E882B721d6b5C4bc3")
 )
 
 // DiscoverPriceOracleAddress returns the canonical price oracle for this chainID
