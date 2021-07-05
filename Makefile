@@ -23,6 +23,11 @@ binary: dist FORCE
 	$(GO) version
 	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/bee ./cmd/bee
 
+.PHONY: proximity
+proximity:
+	$(GO) version
+	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/tool/proximity ./cmd/tool/proximity
+
 dist:
 	mkdir $@
 

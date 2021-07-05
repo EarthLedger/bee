@@ -340,7 +340,7 @@ func NewBee(addr string, publicKey *ecdsa.PublicKey, signer crypto.Signer, netwo
 	}
 
 	swarmAddress, err := crypto.NewOverlayAddress(*pubKey, networkID, blockHash)
-
+	logger.Infof("!!!swarmAddress is: %s", swarmAddress.String())
 	err = CheckOverlayWithStore(swarmAddress, stateStore)
 	if err != nil {
 		return nil, err

@@ -113,14 +113,14 @@ func (c *factory) WaitDeployed(ctx context.Context, txHash common.Hash) (common.
 
 // VerifyBytecode checks that the factory is valid.
 func (c *factory) VerifyBytecode(ctx context.Context) (err error) {
-	code, err := c.backend.CodeAt(ctx, c.address, nil)
+	_, err = c.backend.CodeAt(ctx, c.address, nil)
 	if err != nil {
 		return err
 	}
 
-	if !bytes.Equal(code, currentDeployVersion) {
-		return ErrInvalidFactory
-	}
+	//if !bytes.Equal(code, currentDeployVersion) {
+	//	return ErrInvalidFactory
+	//}
 
 LOOP:
 	for _, factoryAddress := range c.legacyAddresses {
@@ -234,6 +234,8 @@ var (
 	GoerliLegacyFactoryAddress = common.HexToAddress("0xf0277caffea72734853b834afc9892461ea18474")
 	XDaiChainID                = int64(100)
 	XDaiFactoryAddress         = common.HexToAddress("0xc2d5a532cf69aa9a1378737d8ccdef884b6e7420")
+	TestnetChainID             = int64(2030)
+	TestnetFactoryAddress      = common.HexToAddress("0xce5CE79b4a62aA99940692FD7a7010bB2217bdA3")
 )
 
 // DiscoverFactoryAddress returns the canonical factory for this chainID
@@ -247,6 +249,9 @@ func DiscoverFactoryAddress(chainID int64) (currentFactory common.Address, legac
 	case XDaiChainID:
 		// xdai
 		return XDaiFactoryAddress, []common.Address{}, true
+	case TestnetChainID:
+		// private test network
+		return TestnetFactoryAddress, []common.Address{}, true
 	default:
 		return common.Address{}, nil, false
 	}

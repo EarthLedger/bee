@@ -151,6 +151,8 @@ var (
 	goerliContractAddress = common.HexToAddress("0x0c9de531dcb38b758fe8a2c163444a5e54ee0db2")
 	xdaiChainID           = int64(100)
 	xdaiContractAddress   = common.HexToAddress("0x0FDc5429C50e2a39066D8A94F3e2D2476fcc3b85")
+	testnetChainID         = int64(2030)
+	testnetContractAddress = common.HexToAddress("0x2Ba4A0453118fbe31dAB6008C990A80190e00d25")
 )
 
 // DiscoverPriceOracleAddress returns the canonical price oracle for this chainID
@@ -160,6 +162,8 @@ func DiscoverPriceOracleAddress(chainID int64) (priceOracleAddress common.Addres
 		return goerliContractAddress, true
 	case xdaiChainID:
 		return xdaiContractAddress, true
+	case testnetChainID:
+		return testnetContractAddress, true
 	}
 	return common.Address{}, false
 }

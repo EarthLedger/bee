@@ -330,6 +330,10 @@ var (
 	XDaiChainID                       = int64(100)
 	XDaiPostageStampContractAddress   = common.HexToAddress("0x6a1a21eca3ab28be85c7ba22b2d6eae5907c900e")
 	XDaiStartBlock                    = uint64(16515648)
+	TestnetChainID                     = int64(2030)
+	TestnetPostageStampContractAddress = common.HexToAddress("0xbf7ed1296366a39641c9b65db157d3e8cddf7b21")
+	TestnetStartBlock                  = uint64(9645)
+
 )
 
 // DiscoverAddresses returns the canonical contracts for this chainID
@@ -339,6 +343,8 @@ func DiscoverAddresses(chainID int64) (postageStamp common.Address, startBlock u
 		return GoerliPostageStampContractAddress, GoerliStartBlock, true
 	case XDaiChainID:
 		return XDaiPostageStampContractAddress, XDaiStartBlock, true
+	case TestnetChainID:
+		return TestnetPostageStampContractAddress, TestnetStartBlock, true
 	default:
 		return common.Address{}, 0, false
 	}
