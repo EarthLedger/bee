@@ -28,6 +28,11 @@ proximity:
 	$(GO) version
 	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/tool/proximity ./cmd/tool/proximity
 
+.PHONY: topo
+topo:
+	$(GO) version
+	$(GO) build -trimpath -ldflags "$(LDFLAGS)" -o dist/tool/topo ./cmd/tool/topo
+
 dist:
 	mkdir $@
 
