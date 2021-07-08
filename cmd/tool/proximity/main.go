@@ -1,21 +1,25 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/ethersphere/bee/cmd/tool/common"
 	"github.com/ethersphere/bee/pkg/swarm"
+	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 func main() {
-	fmt.Println("proximity")
 	if len(os.Args) <= 3 {
-		fmt.Println("please input <base address> <file name> <load or other>")
+		fmt.Println("please input <base address> <file name> <proximity>")
 		os.Exit(-1)
 	}
 
 	address := os.Args[1]
 	filename := os.Args[2]
-	action := os.Args[3]
+	proximity, _ := strconv.Atoi(os.Args[3])
+	targetFileName :=  os.Args[4]
 
 	fmt.Println("peer address ", address)
 	addr, err := swarm.ParseHexAddress(address)
@@ -24,10 +28,10 @@ func main() {
 		os.Exit(-1)
 	}
 
-	calcNeighborProximity(addr, filename, action)
+	calcNeighborProximity(addr, filename, proximity, targetFileName)
 }
 
-func calcNeighborProximity(base swarm.Address, filename string, action string) {
+func calcNeighborProximity(base swarm.Address, filename string, proximity int, targetFileName string) {
 	ns := load_all_address(filename)
 	for i := range ns {
 		po, err := calcProximity(base, ns[i].Address)
@@ -38,7 +42,7 @@ func calcNeighborProximity(base swarm.Address, filename string, action string) {
 		}
 		ns[i].Po = po
 	}
-	saveNeighborPo(ns, action)
+	saveNeighborByPo(ns, proximity, targetFileName)
 }
 
 func calcProximity(base swarm.Address, neighbor string) (uint8, error) {
@@ -51,13 +55,33 @@ func calcProximity(base swarm.Address, neighbor string) (uint8, error) {
 	return swarm.Proximity(base.Bytes(), address.Bytes()), nil
 }
 
-func saveNeighborPo(ns []Neighbor, action string) {
-	for i := 0; i < len(ns); i++ {
-		if action == "load" {
-			fmt.Println(ns[i].Address)
-		} else {
-			fmt.Println(ns[i].tostring())
-		}
-
+func saveNeighborByPo(ns []Neighbor, proximity int, targetFileName string) {
+	if proximity == -1 {
+		saveAllNeighborInfo(ns, targetFileName)
+	} else {
+		saveNeighborAddressByPo(ns, proximity, targetFileName)
 	}
+}
+
+func saveAllNeighborInfo(ns []Neighbor, targetFileName string) {
+	var info []string
+	for i := 0; i < len(ns); i++ {
+		info = append(info,  fmt.Sprint(ns[i].allToString()))
+	}
+
+	file, _ := json.MarshalIndent(info, "", " ")
+	_ = ioutil.WriteFile(targetFileName, file, 0644)
+}
+
+func saveNeighborAddressByPo(ns []Neighbor, proximity int, targetFileName string) {
+	var bins common.Nodes
+	for i := 0; i < len(ns); i++ {
+		if proximity == int(ns[i].Po) {
+			//fmt.Println(ns[i].addressToString())
+			bins.Address = append(bins.Address, ns[i].Address)
+		}
+	}
+
+	file, _ := json.MarshalIndent(bins, "", " ")
+	_ = ioutil.WriteFile(targetFileName, file, 0644)
 }
