@@ -11,6 +11,29 @@ import (
 )
 
 func main() {
+	if len(os.Args) <= 2 {
+		fmt.Println("please input <base node swarm address> <peer swarm address> ")
+		os.Exit(-1)
+	}
+
+	base := os.Args[1]
+	peerAddress := os.Args[2]
+	baseAddress, err := swarm.ParseHexAddress(base)
+	if err != nil {
+		fmt.Println("input base address parse error: ", err)
+		os.Exit(-1)
+	}
+
+	po, err := calcProximity(baseAddress, peerAddress)
+	if err != nil {
+		fmt.Println("input peer address parse error: ", err)
+		os.Exit(-1)
+	}
+
+	fmt.Printf("proximity: %d\n", po)
+}
+
+func main_old() {
 	if len(os.Args) <= 3 {
 		fmt.Println("please input <base address> <file name> <proximity>")
 		os.Exit(-1)
