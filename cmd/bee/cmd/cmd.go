@@ -127,6 +127,8 @@ func newCommand(opts ...option) (c *command, err error) {
 	}
 
 	c.initVersionCmd()
+	// EL feed functional
+	c.initFeedCmd()
 	c.initDBCmd()
 
 	if err := c.initConfigurateOptionsCmd(); err != nil {
