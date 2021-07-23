@@ -92,7 +92,7 @@ func GenerateRandomChunk() swarm.Chunk {
 
 func findClosetChunk(cmd *cobra.Command, nodeMap map[string]*ClosetChunk, count int) {
 	for i := 0; i <= count; i++ {
-		cmd.Printf("\r%d ", i)
+		//cmd.Printf("\r%d ", i)
 		ch := GenerateRandomChunk()
 		for k, data := range nodeMap {
 			po := swarm.Proximity(data.node.Bytes(), ch.Address().Bytes())
