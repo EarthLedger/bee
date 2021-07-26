@@ -205,6 +205,9 @@ func (s *Service) rateLimitPeer(peer swarm.Address, count int) error {
 	s.limiterLock.Lock()
 	defer s.limiterLock.Unlock()
 
+	// disable limit
+	return nil
+
 	addr := peer.ByteString()
 
 	limiter, ok := s.limiter[addr]

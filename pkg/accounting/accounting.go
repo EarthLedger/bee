@@ -225,6 +225,8 @@ func (a *Accounting) Reserve(ctx context.Context, peer swarm.Address, price uint
 	// and we are actually in debt, trigger settlement.
 	// we pay early to avoid needlessly blocking request later when concurrent requests occur and we are already close to the payment threshold.
 
+	a.logger.Tracef("Reserve price: %d threshold: %d, earlyPayment: %d, increasedExpectedDebt: %d, increasedExpectedDebtReduced: %d, currentBalance: %d, accountingPeer: %v ",
+		bigPrice, threshold, a.earlyPayment, increasedExpectedDebt, increasedExpectedDebtReduced, currentBalance, peer)
 	if increasedExpectedDebtReduced.Cmp(threshold) >= 0 && currentBalance.Cmp(big.NewInt(0)) < 0 {
 		err = a.settle(peer, accountingPeer)
 		if err != nil {
